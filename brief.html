@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phantom Stock</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ground:#EEF1EC;--paper:#F8F9F5;--ink:#16241E;--ink-2:#4A5A52;--mute:#7C8A80;--rule:#CFD7D0;--rule-soft:#E0E6DF;--accent:#B5D334;--accent-ink:#5F7A00;--accent-soft:#E9F2C3;--bad:#C0392B;--bad-soft:#F3D9D5;--good:#2E8B57;--good-soft:#DDEFE4;--warn:#D28B1B}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ground:#101915;--paper:#172420;--ink:#E4EBE3;--ink-2:#B7C3BA;--mute:#7F8E85;--rule:#2E3D36;--rule-soft:#22302A;--accent:#C8E64A;--accent-ink:#C8E64A;--accent-soft:#2A3A16;--bad:#E06A5C;--bad-soft:#3B1D19;--good:#5DBD8A;--good-soft:#193226;--warn:#E3A748}}
+:root[data-theme="dark"]{--ground:#101915;--paper:#172420;--ink:#E4EBE3;--ink-2:#B7C3BA;--mute:#7F8E85;--rule:#2E3D36;--rule-soft:#22302A;--accent:#C8E64A;--accent-ink:#C8E64A;--accent-soft:#2A3A16;--bad:#E06A5C;--bad-soft:#3B1D19;--good:#5DBD8A;--good-soft:#193226;--warn:#E3A748}
+*{box-sizing:border-box}html{color-scheme:light dark}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Barlow",system-ui,sans-serif;font-size:17px;line-height:1.5}
+a{color:var(--accent-ink)}
+.wrap{max-width:880px;margin:0 auto;padding:32px 20px 72px}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+h1{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:clamp(40px,6.5vw,64px);line-height:.95;margin:8px 0 12px;letter-spacing:-.01em;text-wrap:balance}
+h1 span{color:var(--accent-ink)}
+.lede{font-size:19px;color:var(--ink-2);max-width:62ch;margin:0 0 8px}
+.meta{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute);border-bottom:3px solid var(--ink);padding-bottom:18px}
+h2{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:30px;line-height:1.05;margin:44px 0 12px;padding-top:14px;border-top:1px solid var(--ink)}
+h2 small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+h3{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:22px;margin:26px 0 6px}
+p{max-width:68ch;margin:0 0 12px}
+ul{max-width:68ch;padding-left:20px;margin:0 0 12px}li{margin-bottom:6px}
+.tablewrap{overflow-x:auto;background:var(--paper);border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);margin:12px 0 18px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15px}
+th{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule)}
+td{padding:9px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+td.n{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:19px;white-space:nowrap}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.themes{display:grid;grid-template-columns:auto 1fr auto;gap:0;border-top:1px solid var(--ink);margin:14px 0 20px}
+.themes>div{padding:10px 12px 10px 0;border-bottom:1px solid var(--rule-soft)}
+.themes .k{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:19px;padding-right:18px;white-space:nowrap}
+.themes .d{color:var(--ink-2);font-size:15px}
+.themes .c{font-family:"IBM Plex Mono",monospace;font-size:13px;white-space:nowrap;padding-left:18px;text-align:right}
+.themes .c b{display:inline-block;height:9px;vertical-align:middle;background:var(--bad);margin-right:8px}
+.gap{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--accent);padding:20px 22px;margin:18px 0 8px}
+.gap .name{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:40px;line-height:1;margin:0 0 4px}
+.gap .def{color:var(--ink-2);margin:0}
+.q{border-left:3px solid var(--rule);padding:6px 14px;margin:10px 0 14px;color:var(--ink-2);font-style:italic;max-width:64ch}
+.q cite{display:block;font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute);margin-top:4px}
+.pill{display:inline-block;padding:1px 7px;border-radius:2px;font-family:"IBM Plex Mono",monospace;font-size:12px;background:var(--bad-soft);color:var(--bad);white-space:nowrap}
+.cta{margin-top:40px;padding:18px 20px;background:var(--accent-soft);border-radius:2px}
+.cta a{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:22px;text-decoration:none;color:var(--ink)}
+.note{font-size:14px;color:var(--mute);max-width:68ch}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Fishing supply · online retail · review analysis</div>
+  <h1>Phantom <span>stock</span></h1>
+  <p class="lede">The one complaint that appears in reviews of all ten major US fishing-supply websites, why it happens, why nobody has fixed it, and the smallest product that addresses it.</p>
+  <p class="meta">Sept 1, 2026 · sources: Trustpilot, BBB, ConsumerAffairs, PissedConsumer, ComplaintsBoard, ResellerRatings, SmartCustomer, BBC Boards, BassResource, TackleTour, Hunt Talk</p>
+
+  <h2><small>Prompt 1</small>The ten sites and their review footprint</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Retailer</th><th>Where the reviews are</th><th>Scale</th></tr>
+    <tr><td class="n">Bass Pro Shops</td><td>Trustpilot (18–19 pp), BBB, PissedConsumer, Yelp</td><td class="mono">655 on PissedConsumer</td></tr>
+    <tr><td class="n">Cabela's</td><td>Trustpilot (23 pp), ConsumerAffairs, PissedConsumer, SmartCustomer, Hunt Talk</td><td class="mono">906 on ConsumerAffairs · 1.9/5</td></tr>
+    <tr><td class="n">Tackle Warehouse</td><td>Trustpilot, BBB, ComplaintsBoard, BBC Boards, TackleTour</td><td class="mono">1.6/5 Trustpilot</td></tr>
+    <tr><td class="n">TackleDirect</td><td>Trustpilot (330 pp), ResellerRatings, SmartCustomer, ComplaintsBoard</td><td class="mono">5,712 on SmartCustomer · 3.8/5</td></tr>
+    <tr><td class="n">FishUSA</td><td>Trustpilot, ResellerRatings, WorthEPenny, HonestBrandReviews</td><td class="mono">2.0–4.0/5 by platform</td></tr>
+    <tr><td class="n">Discount Tackle</td><td>Trustpilot, BBB, WorthEPenny, BBC Boards</td><td class="mono">4.1/5 · best of the ten</td></tr>
+    <tr><td class="n">Sportsman's Warehouse</td><td>Trustpilot (5 pp), BBB, PissedConsumer</td><td class="mono">1.3/5 us-reviews</td></tr>
+    <tr><td class="n">Karl's / Mystery Tackle Box</td><td>Trustpilot (62 pp + 373 pp MTB), BBB, WorthEPenny</td><td class="mono">second-largest corpus</td></tr>
+    <tr><td class="n">Academy Sports + Outdoors</td><td>Trustpilot (9 pp), PissedConsumer, ComplaintsBoard, BBB, BBC Boards</td><td class="mono">637 on PissedConsumer · 2.1/5</td></tr>
+    <tr><td class="n">Scheels</td><td>Trustpilot (28–30 pp)</td><td class="mono">—</td></tr>
+  </table></div>
+  <p class="note">Omnia Fishing was also examined. It has too few public reviews to rank, but its complaints match the pattern and are included below. Direct page fetches were blocked in the research environment, so review text is quoted or closely paraphrased from search excerpts of those pages rather than full scrapes.</p>
+
+  <h2><small>Prompt 2</small>What repeats across the ten</h2>
+  <p>Bars show how many of the ten retailers had at least one concrete review describing the theme.</p>
+  <div class="themes">
+    <div class="k">A · Phantom stock</div><div class="d">"In Stock" at checkout, card charged, then cancelled, backordered, drop-shipped or silent.</div><div class="c"><b style="width:100px"></b>10 / 10</div>
+    <div class="k">C · Unreachable support</div><div class="d">Voicemail loops, unanswered email, reps who hang up or can't act.</div><div class="c"><b style="width:100px"></b>10 / 10</div>
+    <div class="k">B · Silence after the charge</div><div class="d">No tracking, no backorder notice, no cancellation email; customer finds out by checking their card.</div><div class="c"><b style="width:90px"></b>9 / 10</div>
+    <div class="k">D · Shipping slower than sold</div><div class="d">2-day taking a week; standard orders sitting 4–5 days before a label exists.</div><div class="c"><b style="width:80px"></b>8 / 10</div>
+    <div class="k">E · Wrong, partial or damaged</div><div class="d">Line without the reel, bucket without the seat, half the box.</div><div class="c"><b style="width:70px"></b>7 / 10</div>
+    <div class="k">F · Refund and return friction</div><div class="d">Promised 24–48h refunds that slip; partial refunds; 5-week returns.</div><div class="c"><b style="width:60px"></b>6 / 10</div>
+    <div class="k">G · Billing surprises</div><div class="d">Duplicate or year-later charges, split payments rejected.</div><div class="c"><b style="width:40px"></b>4 / 10</div>
+  </div>
+  <p>Themes B, C and D are mostly the <em>aftermath</em> of theme A: the silence, the phone calls and the "slow shipping" reviews usually begin with an order that was never really in stock. Price, selection, site design and product quality do not repeat across sites.</p>
+
+  <h2><small>Prompt 3</small>The single biggest pain gap</h2>
+  <div class="gap">
+    <p class="name">1 · Phantom stock</p>
+    <p class="def">The product page says <em>In Stock</em>, the card is charged at checkout, and the customer learns days or weeks later, usually by noticing nothing has shipped, that the item was backordered, drop-shipped from a vendor who doesn't have it, or never really there.</p>
+  </div>
+
+  <h3>2 · Evidence</h3>
+  <ul>
+    <li>Present on all ten sites plus Omnia. Every other theme is on fewer, and most of them are downstream of this one.</li>
+    <li>Retailers have institutionalized it. Bass Pro, Cabela's and Sportsman's publish help articles titled "Why was my backorder / order canceled?". TackleDirect's FAQ says backorders unfilled in 30 days are cancelled. Omnia's terms reserve the right to cancel when "availability information on the website is incorrect." Scheels' public reply says it "cannot guarantee items will be on the sales floor."</li>
+    <li>The harm is time-bound and unrefundable.</li>
+  </ul>
+  <div class="q">"Nowhere on the website does it mention that any fishing poles won't ship for weeks, absolute waste of time and ruined a fishing trip."<cite>Karl's Bait &amp; Tackle, Trustpilot</cite></div>
+  <div class="q">"Once you pay and wait 24 to 48 hours for the tracking, the product mysteriously becomes sold out, even though the product is still available for sale online."<cite>Scheels, Trustpilot</cite></div>
+  <div class="q">"We still have your scale set aside, we're just not prioritizing back orders and we are getting new orders out."<cite>Tackle Warehouse staff, quoted on BBC Boards</cite></div>
+  <div class="q">"They should have the product before taking payment."<cite>TackleDirect, Trustpilot, after 16 business days</cite></div>
+  <ul>
+    <li>Money is held meanwhile: 7 weeks (Cabela's), 4+ months (Tackle Warehouse), 7 months (TackleDirect pre-order), 2 months (TackleDirect, Karl's).</li>
+  </ul>
+
+  <h3>3 · Root cause</h3>
+  <p>The "In Stock" badge is not a promise from a warehouse. It is the union of four inventory sources with different reliability, all rendered as the same green text:</p>
+  <ul>
+    <li><strong>Store-floor fulfillment</strong> (Scheels, Sportsman's, Bass Pro/Cabela's): a walk-in customer can buy the unit between checkout and pick.</li>
+    <li><strong>Drop-ship SKUs</strong> (Discount Tackle, Omnia, TackleDirect, Academy marketplace): the retailer shows a vendor feed that is stale or optimistic.</li>
+    <li><strong>Backorder-as-purchase</strong> (Tackle Warehouse, TackleDirect, Cabela's): checkout accepts and charges for units that exist only in an inbound purchase order.</li>
+    <li><strong>Charge on order, not on ship</strong>: with the card already captured, nothing forces the retailer to say anything until its own cancellation window expires.</li>
+  </ul>
+
+  <h3>4 · Why it's missed</h3>
+  <ul>
+    <li><strong>Every party sees an edge case.</strong> Each retailer's data says most orders ship fine, so the fix stays a help-center article. Review sites bucket it under "shipping" or "customer service," hiding that it is one specific cross-retailer failure.</li>
+    <li><strong>Existing tools solve the opposite problem.</strong> Back-in-stock alerters (Visualping, NowInStock, Distill, retailers' own "notify me") tell you when a page <em>says</em> an item is available. Nothing tells you whether that claim has been <em>true</em> for other buyers. Price trackers compare price, never fulfillment.</li>
+    <li><strong>Reputation scores are too coarse.</strong> A 1.8-star rating mixes gun-counter rudeness, warranty disputes and shipping. An angler choosing between two shops for a reel needed by Friday cannot extract "will this ship this week" from either.</li>
+    <li><strong>Nobody is incentivized to publish it.</strong> Retailers won't advertise cancel rates; marketplaces publish ship-rates only for their own sellers; carriers only see a parcel once it exists.</li>
+  </ul>
+
+  <h3>5 · Opportunity</h3>
+  <p>An independent, per-retailer <strong>ships-as-promised rate</strong>, built from buyers' own order outcomes, answering one question before checkout: when this retailer says In Stock, how often does it ship with tracking within three business days?</p>
+  <ul>
+    <li>Smallest useful unit is the retailer-level rate plus a documented-incident count. SKU and category rates are the obvious next step, not a prerequisite.</li>
+    <li>Wedge: tournament and trip-driven anglers, who feel the cost most and already trade this information informally on forums.</li>
+    <li>Moat: the outcome log compounds, retailers can't publish it without disclosing it, and general review sites have no field for "days to tracking."</li>
+    <li>Deliberately out of scope for the first product: a browser extension on the product page, retailer-side "charge on ship" badges, automatic capture from order-confirmation emails.</li>
+  </ul>
+
+  <div class="cta">
+    <div class="eyebrow">Prompt 4 · the product</div>
+    <a href="https://claude.ai/code/artifact/9b1b26f8-212e-48ff-9e70-69413cc7ee07">Did It Ship? → the ledger</a>
+    <p class="note" style="margin:6px 0 0">One page. Log an order, see the per-retailer rate. Nothing else.</p>
+  </div>
+</div>
+</body>
+</html>
