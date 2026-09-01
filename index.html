@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Did It Ship?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#EEF1EC; --paper:#F8F9F5; --ink:#16241E; --ink-2:#4A5A52; --mute:#7C8A80;
+  --rule:#CFD7D0; --rule-soft:#E0E6DF;
+  --accent:#B5D334; --accent-ink:#5F7A00; --accent-soft:#E9F2C3;
+  --water:#2E5D4B;
+  --good:#2E8B57; --warn:#D28B1B; --bad:#C0392B;
+  --good-soft:#DDEFE4; --warn-soft:#F7E8CF; --bad-soft:#F3D9D5;
+  --focus:#2E5D4B;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#101915; --paper:#172420; --ink:#E4EBE3; --ink-2:#B7C3BA; --mute:#7F8E85;
+    --rule:#2E3D36; --rule-soft:#22302A;
+    --accent:#C8E64A; --accent-ink:#C8E64A; --accent-soft:#2A3A16;
+    --water:#7FB39C;
+    --good:#5DBD8A; --warn:#E3A748; --bad:#E06A5C;
+    --good-soft:#193226; --warn-soft:#3A2C12; --bad-soft:#3B1D19;
+    --focus:#C8E64A;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101915; --paper:#172420; --ink:#E4EBE3; --ink-2:#B7C3BA; --mute:#7F8E85;
+  --rule:#2E3D36; --rule-soft:#22302A;
+  --accent:#C8E64A; --accent-ink:#C8E64A; --accent-soft:#2A3A16;
+  --water:#7FB39C;
+  --good:#5DBD8A; --warn:#E3A748; --bad:#E06A5C;
+  --good-soft:#193226; --warn-soft:#3A2C12; --bad-soft:#3B1D19;
+  --focus:#C8E64A;
+}
+*{box-sizing:border-box}
+html{color-scheme:light dark}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:var(--accent-ink)}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.display{font-family:"Barlow Condensed","Barlow",system-ui,sans-serif}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+
+/* header */
+header{display:grid;grid-template-columns:1fr auto;gap:16px 32px;align-items:end;padding-bottom:18px;border-bottom:3px solid var(--ink)}
+header h1{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:700;font-size:clamp(44px,7vw,72px);line-height:.92;margin:6px 0 10px;letter-spacing:-.01em;text-wrap:balance}
+header h1 .q{color:var(--accent-ink)}
+header p{margin:0;max-width:60ch;color:var(--ink-2);font-size:17px}
+.mode{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--rule);border-radius:2px;background:var(--paper);font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink-2);white-space:nowrap}
+.mode i{width:8px;height:8px;border-radius:50%;background:var(--mute);display:inline-block}
+.mode.shared i{background:var(--good)}
+
+/* section titles */
+h2{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:600;font-size:26px;line-height:1.05;margin:0;letter-spacing:.005em}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin:34px 0 12px;flex-wrap:wrap}
+.sec-head .sub{color:var(--mute);font-size:14px}
+
+/* scoreboard */
+.tablewrap{overflow-x:auto;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);background:var(--paper)}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule)}
+th.num,td.num{text-align:right}
+td{padding:11px 12px;border-bottom:1px solid var(--rule-soft);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.name{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:600;font-size:21px;line-height:1;white-space:nowrap}
+td.name small{display:block;font-family:"Barlow",sans-serif;font-weight:400;font-size:12px;color:var(--mute);margin-top:4px;letter-spacing:0}
+.rate{display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;font-size:15px}
+.rate b{font-weight:500;min-width:4.2ch;text-align:right}
+.bar{width:88px;height:8px;background:var(--rule-soft);border-radius:1px;overflow:hidden;position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--good)}
+.bar.warn i{background:var(--warn)} .bar.bad i{background:var(--bad)}
+.rate.none{color:var(--mute)}
+.pill{display:inline-block;padding:2px 8px;border-radius:2px;font-family:"IBM Plex Mono",monospace;font-size:12px;line-height:1.5;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.mute{background:var(--rule-soft);color:var(--ink-2)}
+td .stripe{display:inline-block;width:4px;height:22px;margin-right:10px;vertical-align:middle;background:var(--rule)}
+.stripe.good{background:var(--good)} .stripe.warn{background:var(--warn)} .stripe.bad{background:var(--bad)}
+.docbtn{background:none;border:0;padding:0;color:var(--accent-ink);font:inherit;font-family:"IBM Plex Mono",monospace;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.docbtn:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;display:inline-block}
+
+/* lower grid */
+.grid{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:28px;margin-top:36px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+
+/* form: packing slip */
+form.slip{background:var(--paper);border:1px solid var(--rule);border-top:3px solid var(--accent);padding:18px 18px 16px}
+form.slip h2{margin-bottom:2px}
+form.slip .hint{color:var(--mute);font-size:13px;margin:0 0 14px}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+input,select{font:inherit;font-size:15px;color:var(--ink);background:var(--ground);border:1px solid var(--rule);border-radius:2px;padding:9px 10px;width:100%}
+input[type=date]{font-family:"IBM Plex Mono",monospace;font-size:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.primary{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:600;font-size:19px;letter-spacing:.02em;text-transform:uppercase;background:var(--ink);color:var(--ground);border:0;border-radius:2px;padding:11px 16px;width:100%;cursor:pointer;margin-top:4px}
+button.primary:hover{background:var(--water)}
+:root[data-theme="dark"] button.primary,:root:not([data-theme="light"]) button.primary{}
+.msg{font-size:13px;margin:8px 0 0;min-height:1.2em}
+.msg.err{color:var(--bad)} .msg.ok{color:var(--good)}
+.verdict{margin-top:10px;padding:10px 12px;border-left:3px solid var(--rule);background:var(--ground);font-size:14px;color:var(--ink-2)}
+.verdict.good{border-color:var(--good)} .verdict.bad{border-color:var(--bad)} .verdict.warn{border-color:var(--warn)}
+
+/* log list */
+.log{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.log li{display:grid;grid-template-columns:110px 1fr auto;gap:6px 14px;padding:11px 0;border-bottom:1px solid var(--rule-soft);align-items:start}
+.log .when{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--mute);padding-top:3px}
+.log .who{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:600;font-size:18px;line-height:1.1}
+.log .what{font-size:14px;color:var(--ink-2);margin-top:2px}
+.log .what a{word-break:break-all}
+.log .out{justify-self:end}
+.log .del{background:none;border:0;color:var(--mute);cursor:pointer;font-size:12px;padding:2px 4px;justify-self:end}
+.log .del:hover{color:var(--bad)}
+.tabs{display:flex;gap:2px;margin:0 0 10px}
+.tabs button{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);cursor:pointer;border-radius:2px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.empty{padding:22px 0;color:var(--mute);font-size:14px}
+.filterbar{font-size:13px;color:var(--ink-2);margin:0 0 8px}
+.filterbar button{font:inherit;font-size:13px;background:none;border:0;color:var(--accent-ink);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+
+/* definition footer */
+.def{margin-top:40px;padding-top:16px;border-top:1px solid var(--rule);display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px 28px;font-size:14px;color:var(--ink-2)}
+.def b{display:block;font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.def p{margin:0;max-width:52ch}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .35s ease}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Fishing tackle · online orders · ships-as-promised ledger</div>
+      <h1>Did it <span class="q">ship?</span></h1>
+      <p>When a tackle site says <em>In Stock</em> and takes your money, how often does it actually ship with tracking inside three business days? Anglers log what happened. The rate is the answer.</p>
+    </div>
+    <div class="mode" id="mode"><i></i><span>This browser only</span></div>
+  </header>
+
+  <div class="sec-head">
+    <h2>Scoreboard</h2>
+    <span class="sub" id="summary"></span>
+  </div>
+  <div class="tablewrap">
+    <table id="board">
+      <thead><tr>
+        <th>Retailer</th>
+        <th>Ships as promised</th>
+        <th class="num">Kept</th>
+        <th class="num">Phantom</th>
+        <th class="num">Pending</th>
+        <th class="num">Median days to tracking</th>
+        <th class="num">Public reports</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--good)"></i> 80%+ ships as promised</span>
+    <span><i style="background:var(--warn)"></i> 50–79%</span>
+    <span><i style="background:var(--bad)"></i> under 50%</span>
+    <span><i style="background:var(--rule)"></i> no logged orders yet</span>
+  </div>
+
+  <div class="grid">
+    <form class="slip" id="form" novalidate>
+      <h2>Log an order</h2>
+      <p class="hint">One order, one line. No account, no email.</p>
+      <div class="field"><label for="retailer">Retailer</label>
+        <select id="retailer" required></select></div>
+      <div class="field"><label for="item">What you ordered <span style="text-transform:none;letter-spacing:0;color:var(--mute)">(optional)</span></label>
+        <input id="item" maxlength="80" placeholder="e.g. Daiwa Tatula SV TW 103, 7.1:1"></div>
+      <div class="row2">
+        <div class="field"><label for="said">Site said</label>
+          <select id="said">
+            <option value="in_stock">In stock</option>
+            <option value="backorder">Backordered / pre-order</option>
+            <option value="vendor">Ships from vendor</option>
+          </select></div>
+        <div class="field"><label for="ordered">Ordered on</label>
+          <input id="ordered" type="date" required></div>
+      </div>
+      <div class="field"><label for="outcome">What happened</label>
+        <select id="outcome">
+          <option value="shipped">Shipped with tracking</option>
+          <option value="silent">Nothing yet, no tracking</option>
+          <option value="backordered">Told it was backordered after paying</option>
+          <option value="cancelled">Cancelled after paying</option>
+          <option value="partial">Only part of it shipped</option>
+        </select></div>
+      <div class="field" id="shippedField"><label for="shipped">Tracking received on</label>
+        <input id="shipped" type="date"></div>
+      <button class="primary" type="submit">Add to the ledger</button>
+      <p class="msg" id="msg" aria-live="polite"></p>
+      <div class="verdict" id="verdict" hidden></div>
+    </form>
+
+    <section>
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="logged">Logged orders</button>
+        <button role="tab" aria-selected="false" data-tab="public">Documented public reports</button>
+      </div>
+      <p class="filterbar" id="filterbar" hidden></p>
+      <ul class="log" id="list"></ul>
+    </section>
+  </div>
+
+  <div class="def">
+    <div><b>Kept</b><p>Site said In Stock, tracking arrived within 3 business days of the order.</p></div>
+    <div><b>Phantom</b><p>Site said In Stock, then: cancelled, backordered, partial, or tracking took more than 3 business days. Silence past 3 business days also counts.</p></div>
+    <div><b>Pending</b><p>In-stock orders under 3 business days old with nothing yet. Not scored either way.</p></div>
+    <div><b>Public reports</b><p>Incidents quoted in public reviews and forums while researching the ten retailers, with source links. They are context, not part of the rate.</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const RETAILERS=[
+  {id:'basspro',name:'Bass Pro Shops',site:'basspro.com'},
+  {id:'cabelas',name:"Cabela's",site:'cabelas.com'},
+  {id:'tacklewarehouse',name:'Tackle Warehouse',site:'tacklewarehouse.com'},
+  {id:'tackledirect',name:'TackleDirect',site:'tackledirect.com'},
+  {id:'fishusa',name:'FishUSA',site:'fishusa.com'},
+  {id:'discounttackle',name:'Discount Tackle',site:'discounttackle.com'},
+  {id:'sportsmans',name:"Sportsman's Warehouse",site:'sportsmans.com'},
+  {id:'karls',name:"Karl's Bait & Tackle",site:'shopkarls.com'},
+  {id:'academy',name:'Academy Sports + Outdoors',site:'academy.com'},
+  {id:'scheels',name:'Scheels',site:'scheels.com'},
+  {id:'omnia',name:'Omnia Fishing',site:'omniafishing.com'},
+  {id:'other',name:'Other retailer',site:''}
+];
+const OUTCOME_LABEL={shipped:'Shipped',silent:'No word',backordered:'Backordered after paying',cancelled:'Cancelled after paying',partial:'Partial shipment'};
+const SAID_LABEL={in_stock:'said In Stock',backorder:'said Backordered',vendor:'said Ships from vendor'};
+
+// Incidents quoted in public reviews and forum threads during research (Sept 2026).
+// These are context shown beside the ledger; they are not counted in the rate.
+const PUBLIC=[
+  {r:'cabelas',item:'Order showing In Stock',out:'cancelled',note:'Charged, next day charges reversed and order marked cancelled with no notification or explanation.',src:'https://www.trustpilot.com/review/www.cabelas.com'},
+  {r:'cabelas',item:'Bass Raider 10e boat',out:'cancelled',note:'Showed 2–3 week delivery, charged $500+, flipped to backordered, money held 7 weeks, then cancelled.',src:'https://www.consumeraffairs.com/retail/cabelas-world-foremost-outfitter.html'},
+  {r:'cabelas',item:'Fishing bucket with seat',out:'partial',note:'Only the bucket arrived.',src:'https://www.trustpilot.com/review/www.cabelas.com'},
+  {r:'basspro',item:'Fishing rod',out:'cancelled',note:'About a week with no shipping updates, then Bass Pro cancelled and refunded.',src:'https://www.bbb.org/us/mo/springfield/profile/hunting-gear/bass-pro-shops-0734-10433/complaints'},
+  {r:'basspro',item:'Two spools of line + Pflueger President baitcaster',out:'partial',note:'Line arrived, reel did not.',src:'https://www.trustpilot.com/review/www.basspro.com'},
+  {r:'basspro',item:'Rod with broken tip, replacement',out:'cancelled',note:'Replacement offered, never sent: out of stock.',src:'https://www.trustpilot.com/review/www.basspro.com'},
+  {r:'tacklewarehouse',item:'Rapala scale (backorder)',out:'backordered',note:'"We still have your scale set aside, we\'re just not prioritizing back orders and getting new orders out."',src:'https://www.bbcboards.net/showthread.php?t=1066991'},
+  {r:'tacklewarehouse',item:'Backordered item',out:'backordered',note:'Card charged immediately; waited over four months.',src:'https://www.trustpilot.com/review/tacklewarehouse.com'},
+  {r:'tackledirect',item:'Daiwa Tatula SV TW 103 (pre-order)',out:'cancelled',note:'Seven months of "waiting on the manufacturer," then a cancellation notice and refund.',src:'https://www.trustpilot.com/review/www.tackledirect.com'},
+  {r:'tackledirect',item:'In-stock order',out:'backordered',note:'Waited 16 business days before being told out of stock. "Should have the product before taking payment."',src:'https://www.trustpilot.com/review/www.tackledirect.com'},
+  {r:'tackledirect',item:'Multi-item order',out:'partial',note:'Charged, then emailed that not all items were actually in stock and some would be cancelled.',src:'https://www.trustpilot.com/review/www.tackledirect.com'},
+  {r:'tackledirect',item:'Order with 7–14 day estimate',out:'backordered',note:'Nearly two months, told "five days" repeatedly, then refunded.',src:'https://www.complaintsboard.com/tackledirect-b142059/reviews'},
+  {r:'fishusa',item:'St. Croix Musky Mojo rod + Penn reel',out:'partial',note:'Only the reel arrived; voicemail four times in 40 minutes.',src:'https://www.trustpilot.com/review/fishusa.com'},
+  {r:'fishusa',item:'Lures',out:'silent',note:'Two weeks, nothing arrived; told it ships today and card already processed, cannot cancel.',src:'https://www.trustpilot.com/review/fishusa.com'},
+  {r:'discounttackle',item:'Item shown In Stock',out:'backordered',note:'Not marked backordered at checkout or on the invoice; charged immediately, told later, no ETA.',src:'https://www.trustpilot.com/review/discounttackle.com'},
+  {r:'discounttackle',item:'Time-sensitive rod (vendor ship)',out:'silent',note:'Five-plus days of silence; told the vendor is "notoriously unreliable," no way to cancel.',src:'https://www.trustpilot.com/review/discounttackle.com'},
+  {r:'sportsmans',item:'Orvis wading jacket (sale)',out:'cancelled',note:'Confirmed, then cancelled as out of stock while the site still showed it in stock at the sale price.',src:'https://www.trustpilot.com/review/www.sportsmans.com'},
+  {r:'sportsmans',item:'Shimano SLX rod',out:'partial',note:'Shipped to a store in Arkansas instead of the customer in Texas.',src:'https://www.trustpilot.com/review/www.sportsmans.com'},
+  {r:'karls',item:'Fishing pole',out:'silent',note:'"Nowhere on the website does it mention that any fishing poles won\'t ship for weeks… ruined a fishing trip."',src:'https://www.trustpilot.com/review/shopkarls.com'},
+  {r:'karls',item:'Mystery Tackle Box',out:'silent',note:'Ordered Nov 29, still not received Jan 14.',src:'https://www.bbb.org/us/tn/mount-juliet/profile/fishing-tackle/karls-bait-and-tackle-0573-37208461/complaints'},
+  {r:'academy',item:'$471 in-stock order',out:'cancelled',note:'Charged immediately; days later "can\'t fulfill due to inventory issues." Same items reappeared at higher prices.',src:'https://www.trustpilot.com/review/academy.com'},
+  {r:'academy',item:'Fishing gear ordered a week before a trip',out:'shipped',note:'Shipped three days after purchase; arrived after the customer had left town.',src:'https://www.trustpilot.com/review/academy.com'},
+  {r:'scheels',item:'Baits for a tournament',out:'cancelled',note:'Charged, then told the items were not in stock.',src:'https://www.trustpilot.com/review/scheels.com'},
+  {r:'scheels',item:'Order showing In Stock',out:'cancelled',note:'Paid, waited 24–48h for tracking, then "sold out," while still for sale on the site. Scheels: orders are picked from store floors.',src:'https://www.trustpilot.com/review/scheels.com'},
+  {r:'omnia',item:'Sale items shown In Stock',out:'cancelled',note:'Were drop-ship; vendor cancelled while the item stayed available at full price elsewhere.',src:'https://www.facebook.com/OmniaFishing/reviews'}
+];
+
+const LS_KEY='did-it-ship.reports.v1';
+const THRESHOLD=3; // business days
+let reports=[]; let mode='local'; let db=null; let tab='logged'; let filter=null;
+
+const $=s=>document.querySelector(s);
+const byId=Object.fromEntries(RETAILERS.map(r=>[r.id,r]));
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+function parseISO(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function bizDays(a,b){let d=parseISO(a),e=parseISO(b),n=0;if(!(d<e))return 0;while(d<e){d.setDate(d.getDate()+1);const w=d.getDay();if(w!==0&&w!==6)n++;}return n;}
+function fmtDate(s){const d=parseISO(s);return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// classify one report: 'kept' | 'phantom' | 'pending' | null (not an in-stock claim)
+function classify(r){
+  if(r.said!=='in_stock') return null;
+  if(r.outcome==='shipped') return (r.shipped&&bizDays(r.ordered,r.shipped)<=THRESHOLD)?'kept':'phantom';
+  if(r.outcome==='silent') return bizDays(r.ordered,todayISO())>THRESHOLD?'phantom':'pending';
+  return 'phantom';
+}
+function median(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+
+function render(){
+  const tb=$('#board tbody');
+  const rows=RETAILERS.filter(r=>r.id!=='other'||reports.some(x=>x.retailer==='other')).map(r=>{
+    const mine=reports.filter(x=>x.retailer===r.id);
+    let kept=0,phantom=0,pending=0;const days=[];
+    for(const x of mine){const c=classify(x);if(c==='kept')kept++;else if(c==='phantom')phantom++;else if(c==='pending')pending++;if(x.outcome==='shipped'&&x.shipped)days.push(bizDays(x.ordered,x.shipped));}
+    const scored=kept+phantom;const rate=scored?kept/scored:null;
+    const pub=PUBLIC.filter(p=>p.r===r.id).length;
+    return {r,kept,phantom,pending,rate,scored,med:median(days),pub,n:mine.length};
+  });
+  rows.sort((a,b)=>{if(a.rate===null&&b.rate===null)return b.pub-a.pub;if(a.rate===null)return 1;if(b.rate===null)return -1;return b.rate-a.rate||b.scored-a.scored;});
+  tb.innerHTML=rows.map(o=>{
+    const tone=o.rate===null?'':o.rate>=.8?'good':o.rate>=.5?'warn':'bad';
+    const pct=o.rate===null?'—':Math.round(o.rate*100)+'%';
+    const rateHtml=o.rate===null
+      ?`<span class="rate none"><b>—</b><span class="pill mute">no logged orders</span></span>`
+      :`<span class="rate"><b>${pct}</b><span class="bar ${tone}"><i style="width:${Math.round(o.rate*100)}%"></i></span><span class="pill mute">n=${o.scored}</span></span>`;
+    return `<tr>
+      <td class="name"><span class="stripe ${tone}"></span>${esc(o.r.name)}${o.r.site?`<small>${esc(o.r.site)}</small>`:''}</td>
+      <td>${rateHtml}</td>
+      <td class="num mono">${o.kept||'·'}</td>
+      <td class="num mono">${o.phantom?`<span class="pill bad">${o.phantom}</span>`:'·'}</td>
+      <td class="num mono">${o.pending||'·'}</td>
+      <td class="num mono">${o.med===null?'·':o.med+' bd'}</td>
+      <td class="num">${o.pub?`<button class="docbtn" data-pub="${o.r.id}">${o.pub}</button>`:'·'}</td>
+    </tr>`;
+  }).join('');
+  const scoredAll=reports.filter(r=>{const c=classify(r);return c==='kept'||c==='phantom';}).length;
+  $('#summary').textContent=`${reports.length} logged order${reports.length===1?'':'s'} · ${scoredAll} scored · ${PUBLIC.length} public reports · threshold ${THRESHOLD} business days`;
+  renderList();
+}
+
+function renderList(){
+  const ul=$('#list');const fb=$('#filterbar');
+  document.querySelectorAll('.tabs [role=tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
+  if(filter){fb.hidden=false;fb.innerHTML=`Showing ${esc(byId[filter].name)} only. <button type="button" id="clearFilter">Show all</button>`;}else{fb.hidden=true;fb.innerHTML='';}
+  if(tab==='public'){
+    const items=PUBLIC.filter(p=>!filter||p.r===filter);
+    ul.innerHTML=items.map(p=>`<li>
+      <span class="when">public review</span>
+      <span><span class="who">${esc(byId[p.r].name)}</span><div class="what">${esc(p.item)} · ${esc(p.note)} <a href="${esc(p.src)}" target="_blank" rel="noopener">source</a></div></span>
+      <span class="out">${pill(p.out)}</span></li>`).join('')||'<li class="empty">No public reports for this retailer.</li>';
+    return;
+  }
+  const items=reports.filter(r=>!filter||r.retailer===filter).slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  if(!items.length){ul.innerHTML=`<li class="empty">No orders logged yet${filter?' for this retailer':''}. Add the last thing you bought online, even if it went fine. Kept promises count too.</li>`;return;}
+  ul.innerHTML=items.map(r=>{
+    const c=classify(r);const days=r.outcome==='shipped'&&r.shipped?bizDays(r.ordered,r.shipped):null;
+    const detail=[r.item?esc(r.item):null,SAID_LABEL[r.said],days!==null?`tracking in ${days} business day${days===1?'':'s'}`:null].filter(Boolean).join(' · ');
+    return `<li>
+      <span class="when">${fmtDate(r.ordered)}</span>
+      <span><span class="who">${esc(byId[r.retailer]?byId[r.retailer].name:r.retailer)}</span><div class="what">${detail}</div></span>
+      <span style="display:grid;gap:4px;justify-items:end">${pill(r.outcome,c)}${r.local?`<button class="del" data-del="${esc(r.id)}" title="Remove this entry">remove</button>`:''}</span></li>`;
+  }).join('');
+}
+function pill(outcome,cls){
+  const tone=cls==='kept'?'good':cls==='pending'?'mute':(outcome==='shipped'&&!cls)?'mute':cls==='phantom'?'bad':(outcome==='shipped'?'good':outcome==='silent'?'warn':'bad');
+  const label=cls==='kept'?'Kept':cls==='pending'?'Pending':cls==='phantom'&&outcome==='shipped'?'Shipped late':OUTCOME_LABEL[outcome];
+  return `<span class="pill ${tone}">${label}</span>`;
+}
+
+// storage
+function loadLocal(){try{const raw=localStorage.getItem(LS_KEY);reports=raw?JSON.parse(raw).map(r=>({...r,local:true})):[];}catch(e){reports=[];}}
+function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(reports.map(({local,...r})=>r)));}catch(e){}}
+function setMode(m){mode=m;const el=$('#mode');el.classList.toggle('shared',m==='shared');el.querySelector('span').textContent=m==='shared'?'Shared ledger · live':'This browser only';}
+async function initShared(){
+  try{
+    if(!(window.claude&&typeof window.claude.use==='function'))return;
+    const d=await window.claude.use('db'); if(!d)return; db=d;
+    d.collection('reports').orderBy('createdAt','desc').limit(1000).onSnapshot(snap=>{
+      reports=snap.docs.map(s=>({id:s.id,...s.data()}));setMode('shared');render();
+    },err=>{db=null;setMode('local');loadLocal();render();});
+  }catch(e){}
+}
+async function addReport(r){
+  if(db){try{await db.collection('reports').add(r);return true;}catch(e){
+    const m=e&&e.code==='quota_exceeded'?'The shared ledger is full. Older entries need to be pruned before new ones can be added.':'Could not save to the shared ledger. Try again in a moment.';
+    showMsg(m,'err');return false;}}
+  reports.push({...r,id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),local:true});saveLocal();render();return true;
+}
+function showMsg(t,k){const el=$('#msg');el.textContent=t;el.className='msg '+(k||'');}
+
+// form
+const sel=$('#retailer');sel.innerHTML=RETAILERS.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('');
+$('#ordered').value=todayISO();$('#ordered').max=todayISO();$('#shipped').max=todayISO();
+function syncShipped(){$('#shippedField').style.display=$('#outcome').value==='shipped'?'':'none';}
+$('#outcome').addEventListener('change',syncShipped);syncShipped();
+$('#form').addEventListener('submit',async e=>{
+  e.preventDefault();showMsg('');
+  const r={retailer:sel.value,item:$('#item').value.trim(),said:$('#said').value,ordered:$('#ordered').value,outcome:$('#outcome').value,shipped:$('#outcome').value==='shipped'?$('#shipped').value:'',createdAt:Date.now()};
+  if(!r.ordered){showMsg('Enter the date you placed the order.','err');return;}
+  if(r.ordered>todayISO()){showMsg('Order date can\'t be in the future.','err');return;}
+  if(r.outcome==='shipped'){if(!r.shipped){showMsg('Enter the day tracking arrived, or pick "Nothing yet" if it hasn\'t.','err');return;}if(r.shipped<r.ordered){showMsg('Tracking date is before the order date.','err');return;}}
+  const ok=await addReport(r);
+  if(ok){
+    const c=classify(r);const v=$('#verdict');v.hidden=false;v.className='verdict '+(c==='kept'?'good':c==='phantom'?'bad':'warn');
+    v.textContent=c==='kept'?`Logged as a kept promise: ${byId[r.retailer].name} shipped inside ${THRESHOLD} business days.`:c==='phantom'?`Logged as phantom stock for ${byId[r.retailer].name}. That is the pattern this ledger exists to expose.`:c==='pending'?`Logged as pending. Come back and update once tracking arrives or ${THRESHOLD} business days pass.`:`Logged. The site didn't claim In Stock, so this entry informs days-to-tracking but not the rate.`;
+    showMsg(mode==='shared'?'Added to the shared ledger.':'Saved in this browser.','ok');
+    $('#item').value='';filter=null;tab='logged';renderList();
+  }
+});
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;renderList();});
+document.addEventListener('click',e=>{
+  const p=e.target.closest('[data-pub]');if(p){filter=p.dataset.pub;tab='public';renderList();document.querySelector('.tabs').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  if(e.target.id==='clearFilter'){filter=null;renderList();return;}
+  const d=e.target.closest('[data-del]');if(d){reports=reports.filter(r=>r.id!==d.dataset.del);saveLocal();render();}
+});
+
+loadLocal();setMode('local');render();initShared();
+})();
+</script>
+</body>
+</html>
